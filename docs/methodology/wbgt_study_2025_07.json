@@ -1,0 +1,108 @@
+{
+  "study": "WBGT method choice and input checks, ERA5 July 2025, Europe",
+  "method": "described in heat_stress.md, section \"On a month of real data\"",
+  "measurements": {
+    "period": "2025-07, UTC days, Europe [72, -25, 34, 45]",
+    "library_commit": "e4fcfee",
+    "thermofeel_version": "2.3.0",
+    "rule": {
+      "hot_threshold_c": 25.0,
+      "timing_cv_max": 0.005,
+      "utci_p99_max_c": 0.5,
+      "convergence_min": 0.99,
+      "max_hour_fill_max": 0.01,
+      "gap_p95_min_c": 1.0
+    },
+    "timing": {
+      "median_cv": {
+        "hour_ending": 0.006548,
+        "start_of_hour": 0.185445,
+        "hour_starting": 0.320979
+      },
+      "median_cv_hour_ending_by_sun_height": {
+        "cosine_above_0.1": 0.003026,
+        "cosine_above_0.2": 0.001499,
+        "cosine_above_0.5": 0.000954
+      },
+      "toa_scale_w_m2_median_of_daily_medians": 1313.01
+    },
+    "utci_abs_diff_c_land": {
+      "n": 14870296,
+      "mean": 1.0125,
+      "p50": 0.8133,
+      "p90": 2.1405,
+      "p95": 2.6409,
+      "p99": 3.7203,
+      "max": 15.7101
+    },
+    "convergence": {
+      "land_cell_hours": 14870328,
+      "nonconverged_land_cell_hours": 0,
+      "hot_cell_days": 272709,
+      "hot_cell_hours": 6545016,
+      "nonconverged_hot_cell_hours": 0,
+      "hot_cell_days_with_max_hour_filled": 0,
+      "missing_input_land_cell_hours": 0,
+      "heat_utci_missing_land_cell_hours": 32,
+      "convergence_on_hot_cell_hours": 1.0,
+      "max_hour_fill_rate_on_hot_cell_days": 0.0
+    },
+    "gap_daily_max_c_hot_cell_days": {
+      "absolute": {
+        "n": 272709,
+        "mean": 2.8272,
+        "p50": 2.6258,
+        "p90": 4.3381,
+        "p95": 4.7681,
+        "p99": 5.4192,
+        "max": 7.1315
+      },
+      "liljegren_minus_mrt": {
+        "n": 272709,
+        "mean": 2.8272,
+        "p50": 2.6258,
+        "p90": 4.3381,
+        "p95": 4.7681,
+        "p99": 5.4192,
+        "max": 7.1315
+      }
+    },
+    "checks": {
+      "timing": false,
+      "utci": false,
+      "convergence": true,
+      "max_hour_fill": true,
+      "gap": true
+    },
+    "default": "mrt",
+    "runtime_s": 657.4
+  },
+  "decision": {
+    "measurements": "measurements, above",
+    "original_rule": {
+      "checks": {
+        "convergence": true,
+        "hottest_hour": true,
+        "timing": false,
+        "gap": true,
+        "utci": false
+      },
+      "default": "mrt"
+    },
+    "amended_rule": {
+      "amendments": [
+        "timing: the 0.5 % limit applies to cells with a sun cosine above 0.1; the comparison with the deliberate mistakes is unchanged",
+        "UTCI: reported as a finding; it does not bear on WBGT and no longer decides the default"
+      ],
+      "timing_median_cv_used": 0.003026,
+      "checks": {
+        "convergence": true,
+        "hottest_hour": true,
+        "timing": true,
+        "gap": true
+      },
+      "default": "liljegren"
+    },
+    "finding_utci_matches_era5_heat": false
+  }
+}

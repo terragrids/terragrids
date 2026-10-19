@@ -1,0 +1,54 @@
+name: Publish to PyPI
+
+# Runs when a version tag (v0.0.1, v0.1.0, ...) is pushed to terragrids/terragrids, and
+# does nothing in any other repository, such as a fork. Uploads with PyPI's trusted
+# publishing: PyPI accepts uploads from this workflow in this repository, in the `pypi`
+# environment, and from nothing else, so no PyPI token is stored.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.repository == 'terragrids/terragrids'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Release only from master, and only the version the package declares
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master || {
+            echo "Tag $GITHUB_REF_NAME is not on master; refusing to publish."; exit 1; }
+          declared="v$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          [ "$declared" = "$GITHUB_REF_NAME" ] || {
+            echo "Tag $GITHUB_REF_NAME does not match the package version $declared."; exit 1; }
+      - name: Build and check
+        run: |
+          pip install build twine
+          python -m build
+          twine check --strict dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

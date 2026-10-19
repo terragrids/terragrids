@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "terragrids"
+version = "0.0.2"
+description = "Population-weighted heat exposure for the areas where health data is recorded."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{ name = "Terragrids" }]
+keywords = ["heat", "climate", "health", "exposure", "ERA5", "UTCI"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+dependencies = ["numpy>=1.24", "thermofeel>=2.3,<2.4"]
+
+[project.urls]
+Homepage = "https://terragrids.com"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10", "build>=1.2", "twine>=5", "pvlib>=0.11", "earthkit-meteo>=1.2.1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/terragrids"]
+
+# Only what a user needs. Repository files (CLAUDE.md, CI workflows) stay out of
+# the package.
+[tool.hatch.build.targets.sdist]
+include = ["src/terragrids", "tests", "docs", "README.md", "LICENSE", "NOTICE", "pyproject.toml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# pvlib, the test-only solar reference, triggers a numpy deprecation inside pandas.
+filterwarnings = ["ignore:The 'generic' unit for NumPy timedelta:DeprecationWarning"]
