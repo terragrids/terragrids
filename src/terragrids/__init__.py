@@ -15,6 +15,6 @@ will turn gridded values into one population-weighted number per administrative 
 The aggregation to areas is not part of the library yet.
 """
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 __all__ = ["__version__"]

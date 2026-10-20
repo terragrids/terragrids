@@ -1,7 +1,10 @@
-"""Two rules for everything in this repository, not only the package.
+"""Three rules for everything in this repository, not only the package.
 
 1. Nothing carries a task ID: task IDs point to a plan that readers cannot see.
 2. Every document is reachable from the README by following links.
+3. Every link in the README is a full address. The README is also the package's page on
+   PyPI, where a link relative to the repository leads nowhere. So it links to this
+   repository's documents through their public copies.
 """
 
 from __future__ import annotations
@@ -30,6 +33,8 @@ TASK_ID = re.compile(r"\b" + "M" + r"\d+\.\d+(\.\d+)*\b")
 EXEMPT = {Path("CLAUDE.md")}
 
 MARKDOWN_LINK = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
+# Where the public repository shows this repository's files.
+PUBLIC_FILES = "https://github.com/terragrids/terragrids/blob/master/"
 
 
 def repository_files() -> list[Path]:
@@ -57,6 +62,15 @@ def test_nothing_carries_a_task_id() -> None:
     assert offenders == {}
 
 
+def linked_file(page: Path, target: str) -> Path | None:
+    """The repository file a link on ``page`` points to, if it points to one."""
+    if target.startswith(PUBLIC_FILES):
+        return Path(target.removeprefix(PUBLIC_FILES))
+    if "://" in target:
+        return None
+    return ((ROOT / page.parent / target).resolve()).relative_to(ROOT)
+
+
 def test_every_document_is_reachable_from_the_readme() -> None:
     documents = {p for p in repository_files() if p.suffix == ".md" and p not in EXEMPT}
     reached = {Path("README.md")}
@@ -64,13 +78,20 @@ def test_every_document_is_reachable_from_the_readme() -> None:
     while to_visit:
         page = to_visit.pop()
         for target in MARKDOWN_LINK.findall((ROOT / page).read_text()):
-            if "://" in target or not target.endswith(".md"):
-                continue
-            linked = ((ROOT / page.parent / target).resolve()).relative_to(ROOT)
-            if linked in documents and linked not in reached:
+            linked = linked_file(page, target)
+            if linked is not None and linked in documents and linked not in reached:
                 reached.add(linked)
                 to_visit.append(linked)
     assert sorted(map(str, documents - reached)) == []
+
+
+def test_every_link_in_the_readme_works_on_pypi() -> None:
+    links = MARKDOWN_LINK.findall((ROOT / "README.md").read_text())
+    assert links and [link for link in links if "://" not in link] == []
+    public = [
+        Path(link.removeprefix(PUBLIC_FILES)) for link in links if link.startswith(PUBLIC_FILES)
+    ]
+    assert public and all((ROOT / path).is_file() for path in public)
 
 
 def test_the_pattern_catches_what_it_should() -> None:

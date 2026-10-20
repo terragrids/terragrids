@@ -14,6 +14,14 @@ will:
 
 The first part exists now. The second is in development, and described below.
 
+## Installing
+
+```
+pip install terragrids
+```
+
+It needs Python 3.10 or later.
+
 ## Heat-stress measures
 
 Three measures, each computed with thermofeel, the library of the European Centre for
@@ -64,7 +72,7 @@ print(kelvin_to_celsius(wbgt_mrt(t2m, d2m, wind, mrt)))  # 28.3 °C
 ```
 
 Each function's documentation explains how to read its values, with typical ranges
-and examples. [How the measures are computed](docs/methodology/heat_stress.md) explains
+and examples. [How the measures are computed](https://github.com/terragrids/terragrids/blob/master/docs/methodology/heat_stress.md) explains
 the methods, how they were checked, and why the published WBGT uses Liljegren's.
 
 ## Values per area
@@ -92,4 +100,4 @@ roughly 150,000 to 800,000 people.
 
 ## Licence
 
-Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0. See [LICENSE](https://github.com/terragrids/terragrids/blob/master/LICENSE) and [NOTICE](https://github.com/terragrids/terragrids/blob/master/NOTICE).

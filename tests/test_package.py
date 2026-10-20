@@ -40,7 +40,7 @@ def imported_top_level_names(path: Path) -> set[str]:
 
 
 def test_the_version_is_exposed() -> None:
-    assert terragrids.__version__ == "0.0.2"
+    assert terragrids.__version__ == "0.0.3"
 
 
 def test_the_library_imports_only_what_users_can_install() -> None:
