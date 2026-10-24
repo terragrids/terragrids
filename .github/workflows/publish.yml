@@ -4,6 +4,12 @@ name: Publish to PyPI
 # does nothing in any other repository, such as a fork. Uploads with PyPI's trusted
 # publishing: PyPI accepts uploads from this workflow in this repository, in the `pypi`
 # environment, and from nothing else, so no PyPI token is stored.
+#
+# What this workflow builds stays on PyPI for ever, so it runs only code we have
+# reviewed. Each Action is named by the exact commit of a release, with the release in a
+# comment, since a tag can be moved to other code. The build tools come only from
+# .github/requirements/publish.txt, which pip checks file by file against its SHA-256.
+# tests/test_repository_rules.py checks both.
 
 on:
   push:
@@ -17,10 +23,10 @@ jobs:
     if: github.repository == 'terragrids/terragrids'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: "3.12"
       - name: Release only from master, and only the version the package declares
@@ -30,12 +36,14 @@ jobs:
           declared="v$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
           [ "$declared" = "$GITHUB_REF_NAME" ] || {
             echo "Tag $GITHUB_REF_NAME does not match the package version $declared."; exit 1; }
-      - name: Build and check
+      # Only built wheels, so no package's own setup code runs while installing. The build
+      # uses the hatchling installed here, not the newest one. The upload step checks the
+      # package's metadata with twine before uploading.
+      - name: Build
         run: |
-          pip install build twine
-          python -m build
-          twine check --strict dist/*
-      - uses: actions/upload-artifact@v4
+          pip install --quiet --require-hashes --only-binary :all: -r .github/requirements/publish.txt
+          python -m build --no-isolation
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: dist
           path: dist/
@@ -47,8 +55,8 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         with:
           name: dist
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3

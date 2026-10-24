@@ -19,13 +19,7 @@ import numpy as np
 import pytest
 import thermofeel
 
-from terragrids.measures import (
-    fill_nonconverged,
-    heat_index,
-    utci,
-    wbgt_liljegren,
-    wbgt_mrt,
-)
+from terragrids.measures import HeatStress
 
 KELVIN = 273.15
 
@@ -66,7 +60,7 @@ def rothfusz(t_f: float, rh: float) -> float:
 
 def heat_index_f(t_f: float, rh: float) -> float:
     t_k = f_to_k(t_f)
-    return k_to_f(float(heat_index(t_k, dewpoint_k(t_k, rh))))
+    return k_to_f(float(HeatStress.heat_index(t_k, dewpoint_k(t_k, rh))))
 
 
 @pytest.mark.parametrize(("t_f", "rh"), [(85, 40), (90, 50), (95, 60), (100, 45), (105, 70)])
@@ -107,9 +101,9 @@ def test_mild_air_uses_the_nws_simple_formula() -> None:
 def test_the_heat_index_accepts_scalars_and_grids() -> None:
     t = np.full((2, 3), f_to_k(95.0))
     d = np.full((2, 3), dewpoint_k(f_to_k(95.0), 60.0))
-    grid = heat_index(t, d)
+    grid = HeatStress.heat_index(t, d)
     assert grid.shape == (2, 3)
-    np.testing.assert_allclose(grid, float(heat_index(t[0, 0], d[0, 0])))
+    np.testing.assert_allclose(grid, float(HeatStress.heat_index(t[0, 0], d[0, 0])))
 
 
 @pytest.mark.parametrize("t_c", [20.0, 25.0, 30.0, 35.0, 40.0, 45.0])
@@ -123,19 +117,19 @@ def test_utci_equals_air_temperature_in_the_reference_environment(t_c: float) ->
     vapour = min(0.5 * saturation, 20.0)
     log_e = np.log10(vapour / 6.11)
     d_k = 237.3 * log_e / (7.5 - log_e) + KELVIN
-    assert float(utci(t_k, d_k, 0.5, t_k)) - KELVIN == pytest.approx(t_c, abs=0.5)
+    assert float(HeatStress.utci(t_k, d_k, 0.5, t_k)) - KELVIN == pytest.approx(t_c, abs=0.5)
 
 
 def test_utci_rises_with_radiant_heat() -> None:
     t_k, d_k = 30.0 + KELVIN, 18.0 + KELVIN
-    values = utci(t_k, d_k, 2.0, np.array([30.0, 40.0, 50.0, 60.0]) + KELVIN)
+    values = HeatStress.utci(t_k, d_k, 2.0, np.array([30.0, 40.0, 50.0, 60.0]) + KELVIN)
     assert np.all(np.diff(values) > 0)
 
 
 def test_utci_accepts_scalars_and_grids() -> None:
-    grid = utci(np.full(4, 303.15), 291.15, np.array([1.0, 2.0, 3.0, 4.0]), 318.15)
+    grid = HeatStress.utci(np.full(4, 303.15), 291.15, np.array([1.0, 2.0, 3.0, 4.0]), 318.15)
     assert grid.shape == (4,)
-    assert float(utci(303.15, 291.15, 1.0, 318.15)) == pytest.approx(grid[0])
+    assert float(HeatStress.utci(303.15, 291.15, 1.0, 318.15)) == pytest.approx(grid[0])
 
 
 def dewpoint_from_rh_c(t_c: float, rh: float) -> float:
@@ -154,7 +148,7 @@ def dewpoint_from_rh_c(t_c: float, rh: float) -> float:
     ],
 )
 def test_the_heat_index_docstring_examples(t_c: float, rh: float, expected_c: float) -> None:
-    value = float(heat_index(t_c + KELVIN, dewpoint_from_rh_c(t_c, rh))) - KELVIN
+    value = float(HeatStress.heat_index(t_c + KELVIN, dewpoint_from_rh_c(t_c, rh))) - KELVIN
     assert value == pytest.approx(expected_c, abs=0.05)
 
 
@@ -173,7 +167,10 @@ def test_the_heat_index_docstring_examples(t_c: float, rh: float, expected_c: fl
 def test_the_utci_docstring_examples(
     t_c: float, rh: float, wind: float, mrt_c: float, expected_c: float
 ) -> None:
-    value = float(utci(t_c + KELVIN, dewpoint_from_rh_c(t_c, rh), wind, mrt_c + KELVIN)) - KELVIN
+    value = (
+        float(HeatStress.utci(t_c + KELVIN, dewpoint_from_rh_c(t_c, rh), wind, mrt_c + KELVIN))
+        - KELVIN
+    )
     assert value == pytest.approx(expected_c, abs=0.05)
 
 
@@ -211,7 +208,7 @@ def test_wbgt_liljegren_matches_liljegrens_original_code(
     expected_c: float,
 ) -> None:
     t_k = t_c + KELVIN
-    value = wbgt_liljegren(t_k, dewpoint_k(t_k, rh), p, wind, sun, direct, cza)
+    value = HeatStress.wbgt_liljegren(t_k, dewpoint_k(t_k, rh), p, wind, sun, direct, cza)
     # The C code computes in single precision.
     assert float(value) - KELVIN == pytest.approx(expected_c, abs=0.01), label
 
@@ -232,7 +229,7 @@ def test_wbgt_mrt_in_shade_is_the_wet_bulb_and_air_weighted() -> None:
         np.array([t_k]), thermofeel.calculate_relative_humidity_percent(t_k, d_k)
     )[0]
     expected = 0.7 * wet_bulb + 0.3 * t_k
-    assert float(wbgt_mrt(t_k, d_k, 2.0, t_k)) == pytest.approx(expected, abs=0.01)
+    assert float(HeatStress.wbgt_mrt(t_k, d_k, 2.0, t_k)) == pytest.approx(expected, abs=0.01)
 
 
 @pytest.mark.parametrize(("t_c", "rh", "wind"), [(20, 70, 1.0), (25, 60, 2.0), (30, 40, 1.0)])
@@ -244,16 +241,22 @@ def test_the_two_methods_nearly_agree_at_night(
     # the mean radiant temperature sits at or a few degrees below the air temperature.
     t_k = t_c + KELVIN
     d_k = dewpoint_k(t_k, rh)
-    night = wbgt_liljegren(t_k, d_k, 1013.0, wind, 0.0, 0.0, 0.0)
-    shade = wbgt_mrt(t_k, d_k, wind, t_k - mrt_below_air)
+    night = HeatStress.wbgt_liljegren(t_k, d_k, 1013.0, wind, 0.0, 0.0, 0.0)
+    shade = HeatStress.wbgt_mrt(t_k, d_k, wind, t_k - mrt_below_air)
     assert float(night) == pytest.approx(float(shade), abs=0.6)
 
 
 def test_wbgt_rises_with_sun_and_temperature_and_falls_with_wind_in_sun() -> None:
     d_k = 18.0 + KELVIN
-    sun = wbgt_liljegren(32 + KELVIN, d_k, 1013.0, 2.0, np.array([0.0, 300, 600, 900]), 0.7, 0.9)
-    warmer = wbgt_liljegren(np.array([28.0, 31.0, 34.0]) + KELVIN, d_k, 1013.0, 2.0, 700, 0.7, 0.9)
-    windier = wbgt_liljegren(32 + KELVIN, d_k, 1013.0, np.array([1.0, 3.0, 6.0]), 800, 0.8, 0.9)
+    sun = HeatStress.wbgt_liljegren(
+        32 + KELVIN, d_k, 1013.0, 2.0, np.array([0.0, 300, 600, 900]), 0.7, 0.9
+    )
+    warmer = HeatStress.wbgt_liljegren(
+        np.array([28.0, 31.0, 34.0]) + KELVIN, d_k, 1013.0, 2.0, 700, 0.7, 0.9
+    )
+    windier = HeatStress.wbgt_liljegren(
+        32 + KELVIN, d_k, 1013.0, np.array([1.0, 3.0, 6.0]), 800, 0.8, 0.9
+    )
     assert np.all(np.diff(sun) > 0)
     assert np.all(np.diff(warmer) > 0)
     assert np.all(np.diff(windier) < 0)
@@ -265,7 +268,9 @@ def test_wbgt_never_falls_below_the_wet_bulb() -> None:
     rh = rng.uniform(10, 90, 200)
     d_k = np.array([dewpoint_k(t, r) for t, r in zip(t_k, rh, strict=True)])
     cza = rng.uniform(0, 1, 200)
-    values = wbgt_liljegren(t_k, d_k, 1013.0, rng.uniform(0.5, 8, 200), 900 * cza, 0.7, cza)
+    values = HeatStress.wbgt_liljegren(
+        t_k, d_k, 1013.0, rng.uniform(0.5, 8, 200), 900 * cza, 0.7, cza
+    )
     wet_bulb = thermofeel.calculate_wbt(t_k, rh)
     assert np.all(values >= wet_bulb)
 
@@ -274,13 +279,13 @@ def test_fill_takes_the_mrt_value_only_where_liljegren_failed() -> None:
     liljegren = np.array([300.0, np.nan, np.nan, 301.0])
     mrt_based = np.array([299.0, 298.0, 297.0, 300.0])
     wind = np.array([2.0, 2.0, np.nan, 2.0])  # the third point had a missing input
-    values, filled = fill_nonconverged(liljegren, mrt_based, [300.0, wind])
+    values, filled = HeatStress.fill_nonconverged(liljegren, mrt_based, [300.0, wind])
     np.testing.assert_array_equal(filled, [False, True, False, False])
     np.testing.assert_array_equal(values[[0, 1, 3]], [300.0, 298.0, 301.0])
     assert np.isnan(values[2])
 
 
 def test_the_wbgt_functions_accept_scalars_and_grids() -> None:
-    grid = wbgt_liljegren(np.full((2, 2), 305.0), 291.0, 1013.0, 2.0, 700.0, 0.7, 0.8)
+    grid = HeatStress.wbgt_liljegren(np.full((2, 2), 305.0), 291.0, 1013.0, 2.0, 700.0, 0.7, 0.8)
     assert grid.shape == (2, 2)
-    assert wbgt_mrt(305.0, 291.0, 2.0, np.full(3, 330.0)).shape == (3,)
+    assert HeatStress.wbgt_mrt(305.0, 291.0, 2.0, np.full(3, 330.0)).shape == (3,)

@@ -14,7 +14,7 @@ heat that a thermometer in the shade never sees.
 
 The library computes three established measures:
 
-| Measure | What it captures | Inputs | Function |
+| Measure | What it captures | Inputs | Method of `HeatStress` |
 |---|---|---|---|
 | Heat index | how hot shaded air feels, given its humidity | temperature, humidity | `heat_index` |
 | Universal Thermal Climate Index (UTCI) | the body's response to air, humidity, wind and radiant heat | temperature, humidity, wind, radiant heat | `utci` |
@@ -43,9 +43,9 @@ graph LR
         UH["UTCI"]
     end
     subgraph HOW["how it is produced"]
-        C1["heat_index"]
-        C2["wbgt_liljegren<br/>with the sun's position"]
-        C3["wbgt_mrt"]
+        C1["HeatStress.heat_index"]
+        C2["HeatStress.wbgt_liljegren<br/>with the sun's position"]
+        C3["HeatStress.wbgt_mrt"]
         C4["no computation:<br/>copied as published"]
     end
     subgraph PUB["published values"]
@@ -76,7 +76,7 @@ it matches ERA5-HEAT.
 ## Reading the three measures
 
 All three are temperatures. The library returns them in kelvin, as ERA5 does;
-`terragrids.units` converts to degrees Celsius or Fahrenheit.
+`Temperature`, in `terragrids.units`, converts to degrees Celsius or Fahrenheit.
 
 **Heat index.** The shaded air temperature that would feel as hot at a moderate
 humidity. The US National Weather Service (NWS) reads it in four bands: 27–32 °C
@@ -157,7 +157,7 @@ thermofeel's Liljegren function is configured as KNMI runs it:
 - the direct share of sunshine is capped at 0.9, and set to 0 when the sun is at or
   below 89.5° from overhead.
 
-The library prepares its inputs from ERA5 (`terragrids.era5`):
+The library prepares its inputs from ERA5, with `Era5` and `Sun` in `terragrids.era5`:
 
 | Input | ERA5 variable | ERA5's form | Conversion |
 |---|---|---|---|

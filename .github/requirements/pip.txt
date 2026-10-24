@@ -1,0 +1,6 @@
+# pip itself, installed by hash before anything else. pip checks certificates with its
+# own copy of certifi. From 26.2.2 that copy no longer trusts emSign ECC Root CA - G3,
+# whose intermediate certificate authorities' private keys leaked in October 2026. The
+# hash means the upgrade itself cannot be tampered with, even by a forged pypi.org.
+pip==26.2.2 \
+    --hash=sha256:fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70

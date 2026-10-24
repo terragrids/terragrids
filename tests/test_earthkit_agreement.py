@@ -1,6 +1,6 @@
 """The hourly sun angle agrees with earthkit-meteo's.
 
-``terragrids.era5.cos_zenith_hourly`` uses the formula of earthkit-meteo, the
+``terragrids.era5.Sun.cos_zenith_hourly`` uses the formula of earthkit-meteo, the
 meteorological library of the European Centre for Medium-Range Weather Forecasts
 (ECMWF). Releases of earthkit-meteo before 1.2.1 dropped the minutes from the time of
 day, so their hourly average was the value at the start of the hour. Release 1.2.1 uses
@@ -23,7 +23,7 @@ import datetime
 import numpy as np
 import pytest
 
-from terragrids.era5 import cos_zenith_hourly
+from terragrids.era5 import Sun
 
 earthkit_solar = pytest.importorskip("earthkit.meteo.solar")
 
@@ -52,5 +52,5 @@ def test_the_hour_average_matches_earthkit_meteo(
         np.asarray(lon),
         intervals_per_hour=4,
     )
-    ours = cos_zenith_hourly(np.datetime64(valid_time), lat, lon)
+    ours = Sun.cos_zenith_hourly(np.datetime64(valid_time), lat, lon)
     assert float(theirs) == pytest.approx(float(ours), abs=AGREEMENT_TOLERANCE), label

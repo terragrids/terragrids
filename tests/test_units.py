@@ -5,12 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from terragrids.units import (
-    celsius_to_kelvin,
-    fahrenheit_to_kelvin,
-    kelvin_to_celsius,
-    kelvin_to_fahrenheit,
-)
+from terragrids.units import Temperature
 
 
 @pytest.mark.parametrize(
@@ -24,18 +19,22 @@ from terragrids.units import (
     ],
 )
 def test_fixed_points(kelvin: float, celsius: float, fahrenheit: float) -> None:
-    assert float(kelvin_to_celsius(kelvin)) == pytest.approx(celsius)
-    assert float(celsius_to_kelvin(celsius)) == pytest.approx(kelvin)
-    assert float(kelvin_to_fahrenheit(kelvin)) == pytest.approx(fahrenheit)
-    assert float(fahrenheit_to_kelvin(fahrenheit)) == pytest.approx(kelvin)
+    assert float(Temperature.kelvin_to_celsius(kelvin)) == pytest.approx(celsius)
+    assert float(Temperature.celsius_to_kelvin(celsius)) == pytest.approx(kelvin)
+    assert float(Temperature.kelvin_to_fahrenheit(kelvin)) == pytest.approx(fahrenheit)
+    assert float(Temperature.fahrenheit_to_kelvin(fahrenheit)) == pytest.approx(kelvin)
 
 
 def test_round_trips_return_the_input() -> None:
     kelvin = np.linspace(200.0, 330.0, 27)
-    np.testing.assert_allclose(celsius_to_kelvin(kelvin_to_celsius(kelvin)), kelvin)
-    np.testing.assert_allclose(fahrenheit_to_kelvin(kelvin_to_fahrenheit(kelvin)), kelvin)
+    np.testing.assert_allclose(
+        Temperature.celsius_to_kelvin(Temperature.kelvin_to_celsius(kelvin)), kelvin
+    )
+    np.testing.assert_allclose(
+        Temperature.fahrenheit_to_kelvin(Temperature.kelvin_to_fahrenheit(kelvin)), kelvin
+    )
 
 
 def test_numbers_lists_and_grids_are_accepted() -> None:
-    assert kelvin_to_celsius([273.15, 283.15]).tolist() == pytest.approx([0.0, 10.0])
-    assert kelvin_to_fahrenheit(np.full((2, 3), 273.15)).shape == (2, 3)
+    assert Temperature.kelvin_to_celsius([273.15, 283.15]).tolist() == pytest.approx([0.0, 10.0])
+    assert Temperature.kelvin_to_fahrenheit(np.full((2, 3), 273.15)).shape == (2, 3)

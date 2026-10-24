@@ -1,4 +1,4 @@
-"""The method registry describes the functions that exist, and names a valid default."""
+"""The method registry describes the methods that exist, and names a valid default."""
 
 from __future__ import annotations
 
@@ -6,15 +6,14 @@ import inspect
 
 import thermofeel
 
-from terragrids import measures
-from terragrids.measures import METHODS, WBGT_DEFAULT
+from terragrids.measures import METHODS, WBGT_DEFAULT, HeatStress
 
 
-def test_every_registered_method_is_a_library_function_with_those_inputs() -> None:
+def test_every_registered_method_is_a_library_method_with_those_inputs() -> None:
     for key, method in METHODS.items():
         assert key == method.function
-        function = getattr(measures, method.function)
-        assert tuple(inspect.signature(function).parameters) == method.inputs
+        computes = getattr(HeatStress, method.function)
+        assert tuple(inspect.signature(computes).parameters) == method.inputs
 
 
 def test_every_registered_method_names_a_thermofeel_function() -> None:

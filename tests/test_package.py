@@ -39,8 +39,9 @@ def imported_top_level_names(path: Path) -> set[str]:
     return names
 
 
-def test_the_version_is_exposed() -> None:
-    assert terragrids.__version__ == "0.0.3"
+def test_the_version_is_the_one_pyproject_declares() -> None:
+    declared = re.search(r'^version = "([^"]+)"', (ROOT / "pyproject.toml").read_text(), re.M)
+    assert declared and terragrids.__version__ == declared.group(1)
 
 
 def test_the_library_imports_only_what_users_can_install() -> None:

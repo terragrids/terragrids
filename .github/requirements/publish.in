@@ -1,0 +1,8 @@
+# The tools the publishing workflow installs from PyPI to build the package, at the
+# versions we have reviewed. These are also the versions the package is checked with
+# before each release. publish.txt pins them and everything they depend on, with the
+# SHA-256 of each file. To upgrade, change a version here and regenerate it with:
+#   uv pip compile --universal --python-version 3.12 --generate-hashes \
+#     .github/requirements/publish.in -o .github/requirements/publish.txt
+build==1.6.1
+hatchling==1.32.4
